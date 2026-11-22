@@ -1,0 +1,47 @@
+
+name: Lab 6 CI Pipeline
+
+on:
+  push:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20, 22]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: lab6-app
+
+      - name: Run ESLint
+        run: npm run lint
+        working-directory: lab6-app
+
+      - name: Run tests
+        run: npm test
+        working-directory: lab6-app
+
+      - name: Build application
+        run: npm run build
+        working-directory: lab6-app
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-app-node-${{ matrix.node-version }}
+          path: lab6-app/dist/
