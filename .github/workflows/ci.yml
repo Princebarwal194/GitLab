@@ -1,0 +1,75 @@
+
+name: Lab 6 and Lab 7 CI Pipeline
+
+on:
+  push:
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22, 24]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: lab6-app
+
+      - name: Run ESLint
+        run: npm run lint
+        working-directory: lab6-app
+
+      - name: Run tests
+        run: npm test
+        working-directory: lab6-app
+
+      - name: Build application
+        run: npm run build
+        working-directory: lab6-app
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-app-node-${{ matrix.node-version }}
+          path: lab6-app/dist/
+
+  publish-docker-image:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./shopeasy-lite
+          push: true
+          tags: |
+            ghcr.io/princebarwal194/shopeasy-lite:latest
+            ghcr.io/princebarwal194/shopeasy-lite:${{ github.sha }}

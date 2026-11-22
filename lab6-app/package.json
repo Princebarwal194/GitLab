@@ -1,0 +1,14 @@
+{
+  "name": "lab6-ci-app",
+  "version": "1.0.0",
+  "description": "Simple application for GitHub Actions CI",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "test": "node --test",
+    "build": "mkdir -p dist && cp index.js dist/"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  }
+}
